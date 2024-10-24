@@ -14,4 +14,14 @@ func MainHandler(r *chi.Mux) {
 	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World!"))
 	})
+
+	r.Mount("/api", ApiRouter())
+}
+
+func ApiRouter() chi.Router {
+	router := chi.NewRouter()
+
+	router.Mount("/recipes", RecipeRouter())
+	router.Mount("/users", UserRouter())
+	return router
 }
