@@ -14,7 +14,7 @@ func main() {
 
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	
-  err := godotenv.Load()
+  err := godotenv.Load() 
   if err != nil {
     log.Fatal().Msg("Error loading .env file")
 		return
@@ -26,7 +26,7 @@ func main() {
 	log.Info().
 		Msg("Started App")
 
-	err = http.ListenAndServe("localhost:3000", r)
+	err = http.ListenAndServe("192.168.18.12:3000", r)
 	if err != nil {
 		log.Err(err)
 	}

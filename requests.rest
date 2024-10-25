@@ -1,0 +1,180 @@
+@baseUrl = http://192.168.18.12:3000
+
+GET {{baseUrl}}/api/users
+
+###
+
+GET {{baseUrl}}/api/recipes/summaries
+
+###
+
+GET {{baseUrl}}/api/recipes/1
+Content-Type: application/json
+
+###
+POST {{baseUrl}}/api/recipes
+Content-Type: application/json
+
+{
+    "Favorite": true,
+    "Title": "Gâteau moelleux au chocolat dans une tasse",
+    "URL": "https://www.ricardocuisine.com/recettes/5769-gateau-moelleux-au-chocolat-dans-une-tasse",
+    "ImageSource": "https://images.ricardocuisine.com/services/recipes/496x670_5769.jpg",
+    "PrepInfo": {
+      "PrepTime": "5 min",
+      "CookTime": "45 sec",
+      "TotalTime": "5 min",
+      "Yield": "1"
+    },
+    "Tags": [
+      "Dessert",
+      "Easy",
+      "Tag 2",
+      "Tag 2",
+      "Really Long Tag 3"
+    ],
+    "Ingredients": [
+      {
+        "Quantity": 3,
+        "Unit": "c. à soupe",
+        "Ingredient": "de farine tout usage non blanchie",
+        "Other": ""
+      },
+      {
+        "Quantity": 2,
+        "Unit": "c. à soupe",
+        "Ingredient": "de cassonade",
+        "Other": ""
+      },
+      {
+        "Quantity": 2,
+        "Unit": "c. à thé",
+        "Ingredient": "de cacao",
+        "Other": ""
+      },
+      {
+        "Quantity": 0.25,
+        "Unit": "c. à thé",
+        "Ingredient": "de poudre à pâte",
+        "Other": ""
+      },
+      {
+        "Quantity": 3,
+        "Unit": "c. à soupe",
+        "Ingredient": "de lait",
+        "Other": ""
+      },
+      {
+        "Quantity": 1,
+        "Unit": "c. à soupe",
+        "Ingredient": "d'huile de canola",
+        "Other": ""
+      },
+      {
+        "Quantity": 1,
+        "Unit": "goutte",
+        "Ingredient": "d'extrait de vanille",
+        "Other": ""
+      },
+      {
+        "Quantity": 10,
+        "Unit": "pépites",
+        "Ingredient": "de chocolat mi-sucré",
+        "Other": ""
+      }
+    ],
+    "Directions": [
+      "Dans une tasse à café d’une contenance d’environ 250 ml (1 tasse), mélange la farine, la cassonade, le cacao et la poudre à pâte. Ajoute le lait, l’huile et la vanille.",
+      "Avec une fourchette, brasse délicatement jusqu’à ce que la pâte n’ait plus de grumeaux. Dépose les pépites de chocolat sur le dessus.",
+      "Cuis le gâteau au micro-ondes 45 secondes. Laisse tiédir 5 minutes pour permettre au gâteau de terminer sa cuisson."
+    ],
+    "Notes": [
+      "Si tu veux en faire plusieurs, triple ou quadruple la recette et mélange-la dans un bol. Répartis ensuite la préparation dans trois ou quatre tasses ou ramequins d’une contenance de 125 ml (½ tasse). Attention, tu dois faire cuire les gâteaux un par un dans le micro-ondes pour obtenir une cuisson uniforme."
+    ]
+}
+Content-Type: application/json
+
+###
+PUT {{baseUrl}}/api/recipes/3
+Content-Type: application/json
+
+{
+    "Favorite": false,
+    "Title": "RICARDO",
+    "URL": "https://www.ricardocuisine.com/recettes/5769-gateau-moelleux-au-chocolat-dans-une-tasse",
+    "ImageSource": "https://images.ricardocuisine.com/services/recipes/496x670_5769.jpg",
+    "PrepInfo": {
+      "PrepTime": "5 min",
+      "CookTime": "45 sec",
+      "TotalTime": "5 min",
+      "Yield": "1"
+    },
+    "Tags": [
+      "Dessert",
+      "Easy",
+      "Tag 2",
+      "Tag 2",
+      "Really Long Tag 3"
+    ],
+    "Ingredients": [
+      {
+        "Quantity": 3,
+        "Unit": "c. à soupe",
+        "Ingredient": "de farine tout usage non blanchie",
+        "Other": ""
+      },
+      {
+        "Quantity": 2,
+        "Unit": "c. à soupe",
+        "Ingredient": "de cassonade",
+        "Other": ""
+      },
+      {
+        "Quantity": 2,
+        "Unit": "c. à thé",
+        "Ingredient": "de cacao",
+        "Other": ""
+      },
+      {
+        "Quantity": 0.25,
+        "Unit": "c. à thé",
+        "Ingredient": "de poudre à pâte",
+        "Other": ""
+      },
+      {
+        "Quantity": 3,
+        "Unit": "c. à soupe",
+        "Ingredient": "de lait",
+        "Other": ""
+      },
+      {
+        "Quantity": 1,
+        "Unit": "c. à soupe",
+        "Ingredient": "d'huile de canola",
+        "Other": ""
+      },
+      {
+        "Quantity": 1,
+        "Unit": "goutte",
+        "Ingredient": "d'extrait de vanille",
+        "Other": ""
+      },
+      {
+        "Quantity": 10,
+        "Unit": "pépites",
+        "Ingredient": "de chocolat mi-sucré",
+        "Other": ""
+      }
+    ],
+    "Directions": [
+      "Dans une tasse à café d’une contenance d’environ 250 ml (1 tasse), mélange la farine, la cassonade, le cacao et la poudre à pâte. Ajoute le lait, l’huile et la vanille.",
+      "Avec une fourchette, brasse délicatement jusqu’à ce que la pâte n’ait plus de grumeaux. Dépose les pépites de chocolat sur le dessus.",
+      "Cuis le gâteau au micro-ondes 45 secondes. Laisse tiédir 5 minutes pour permettre au gâteau de terminer sa cuisson."
+    ],
+    "Notes": [
+      "Si tu veux en faire plusieurs, triple ou quadruple la recette et mélange-la dans un bol. Répartis ensuite la préparation dans trois ou quatre tasses ou ramequins d’une contenance de 125 ml (½ tasse). Attention, tu dois faire cuire les gâteaux un par un dans le micro-ondes pour obtenir une cuisson uniforme."
+    ]
+}
+
+###
+DELETE {{baseUrl}}/api/recipes/3
