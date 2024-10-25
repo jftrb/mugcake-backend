@@ -4,18 +4,18 @@ type PrepInfo struct {
 	PrepTime  string `json:"prepTime,omitempty"`
 	CookTime  string `json:"cookTime,omitempty"`
 	TotalTime string `json:"totalTime,omitempty"`
-	Yield     string `json:"yield,omitempty"`
+	Yield     string `json:"yield"`
 }
 
 type Ingredient struct {
-	Quantity   float32 `json:"quantity,omitempty"`
-	Unit       string  `json:"unit,omitempty"`
-	Ingredient string  `json:"ingredient,omitempty"`
-	Other      string  `json:"other,omitempty"`
+	Quantity   float32 `json:"quantity"`
+	Unit       string  `json:"unit"`
+	Ingredient string  `json:"ingredient"`
+	Other      string  `json:"other"`
 }
 
 type IngredientSection struct {
-	Header      string       `json:"header,omitempty"`
+	Header      string       `json:"header"`
 	Ingredients []Ingredient `json:"ingredients,omitempty"`
 }
 
