@@ -26,7 +26,7 @@ func main() {
 	log.Info().
 		Msg("Started App")
 
-	err = http.ListenAndServe("192.168.18.12:3000", r)
+	err = http.ListenAndServe(":1128", r)
 	if err != nil {
 		log.Err(err).Msg("Error listening http port")
 	}
