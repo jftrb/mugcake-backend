@@ -70,6 +70,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 	middleware.EncodeResponse(w, response)
 }
 
+// TODO : create new tags if not exist
 func PostRecipe(w http.ResponseWriter, r *http.Request) {
 	var recipe models.Recipe
 	if err := json.NewDecoder(r.Body).Decode(&recipe); err != nil {
@@ -84,12 +85,20 @@ func PostRecipe(w http.ResponseWriter, r *http.Request) {
 	defer db.Disconnect()
 
 	userId := "18c47dfb-442f-423a-b0cd-70c8076cb7a9"
-	if err := db.AddRecipe(userId, recipe); err != nil {
+	recipeId, err := db.AddRecipe(userId, recipe); 
+	if err != nil {
 		log.Err(err).Msg("Error - unable to Post Recipe.")
 		api.RequestErrorHandler(w, err)
 	}
+
+	response := api.PostRecipeResponse{
+		ID: recipeId,
+	}
+	
+	middleware.EncodeResponse(w, response)
 }
 
+// TODO : create new tags if not exist
 func PutRecipe(w http.ResponseWriter, r *http.Request) {
 	sRecipeID := chi.URLParam(r, "recipeID")
 	recipeID, err := strconv.Atoi(sRecipeID)

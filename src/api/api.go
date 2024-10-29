@@ -27,6 +27,10 @@ type GetRecipeResponse struct {
 	Recipe 	models.Recipe
 }
 
+type PostRecipeResponse struct {
+	ID int
+}
+
 
 func writeError(w http.ResponseWriter, message string, code int) {
 	resp := Error{

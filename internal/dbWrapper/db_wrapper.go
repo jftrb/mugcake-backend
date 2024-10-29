@@ -17,7 +17,7 @@ type DbWrapper interface {
 	GetUsers() ([]models.User, error)
 	GetRecipeSummaries(userID string) ([]models.RecipeSummary, error)
 	GetRecipe(recipeID int) (models.Recipe, error)
-	AddRecipe(userID string, recipe models.Recipe) (error)
+	AddRecipe(userID string, recipe models.Recipe) (int, error)
 	UpdateRecipe(recipeID int, recipe models.Recipe) (error)
 	DeleteRecipe(recipeID int) (error)
 }
@@ -123,19 +123,19 @@ func (d *dbWrapper) GetRecipe(recipeID int) (models.Recipe, error) {
 	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[models.Recipe])
 }
 
-func (d *dbWrapper)	AddRecipe(userID string, recipe models.Recipe) (error) {
+func (d *dbWrapper)	AddRecipe(userID string, recipe models.Recipe) (int, error) {
 	prepInfo, err := json.Marshal(recipe.PrepInfo)
 	if err != nil {
-		return err
+		return -1, err
 	}
 	
 	ingredientSections, err := json.Marshal(recipe.IngredientSections)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	timeout, _ := context.WithTimeout(context.Background(), time.Second * 2)
-	_, err = d.client.Query(timeout, 
+	rows, err := d.client.Query(timeout, 
 	`INSERT INTO recipes (user_id, favorite, title, url, image_source, prep_info, tags, ingredientSections, directions, notes)
 	VALUES (
 		$1, $2, $3, $4, $5, $6,
@@ -145,9 +145,17 @@ func (d *dbWrapper)	AddRecipe(userID string, recipe models.Recipe) (error) {
 			JOIN   tags ON tags.name = a.tag_name
 			ORDER  BY a.ord
 		),
-		$8, $9, $10)`, userID, recipe.Favorite, recipe.Title, recipe.URL, recipe.ImageSource, prepInfo, recipe.Tags, ingredientSections, recipe.Directions, recipe.Notes)
+		$8, $9, $10)
+		RETURNING id`, userID, recipe.Favorite, recipe.Title, recipe.URL, recipe.ImageSource, prepInfo, recipe.Tags, ingredientSections, recipe.Directions, recipe.Notes)
+	if err != nil {
+		return -1, err
+	}
 
-	return err
+	type PostReturn struct {
+		ID int
+	}
+	postReturn, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[PostReturn]);
+	return postReturn.ID, err
 }
 
 func (d *dbWrapper)	UpdateRecipe(recipeID int, recipe models.Recipe) (error) {

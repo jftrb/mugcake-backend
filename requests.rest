@@ -33,54 +33,59 @@ Content-Type: application/json
       "Tag 2",
       "Really Long Tag 3"
     ],
-    "Ingredients": [
+    "IngredientSections": [
       {
-        "Quantity": 3,
-        "Unit": "c. à soupe",
-        "Ingredient": "de farine tout usage non blanchie",
-        "Other": ""
-      },
-      {
-        "Quantity": 2,
-        "Unit": "c. à soupe",
-        "Ingredient": "de cassonade",
-        "Other": ""
-      },
-      {
-        "Quantity": 2,
-        "Unit": "c. à thé",
-        "Ingredient": "de cacao",
-        "Other": ""
-      },
-      {
-        "Quantity": 0.25,
-        "Unit": "c. à thé",
-        "Ingredient": "de poudre à pâte",
-        "Other": ""
-      },
-      {
-        "Quantity": 3,
-        "Unit": "c. à soupe",
-        "Ingredient": "de lait",
-        "Other": ""
-      },
-      {
-        "Quantity": 1,
-        "Unit": "c. à soupe",
-        "Ingredient": "d'huile de canola",
-        "Other": ""
-      },
-      {
-        "Quantity": 1,
-        "Unit": "goutte",
-        "Ingredient": "d'extrait de vanille",
-        "Other": ""
-      },
-      {
-        "Quantity": 10,
-        "Unit": "pépites",
-        "Ingredient": "de chocolat mi-sucré",
-        "Other": ""
+        "Header": "",
+        "Ingredients": [
+          {
+            "Quantity": 3,
+            "Unit": "c. à soupe",
+            "Ingredient": "de farine tout usage non blanchie",
+            "Other": ""
+          },
+          {
+            "Quantity": 2,
+            "Unit": "c. à soupe",
+            "Ingredient": "de cassonade",
+            "Other": ""
+          },
+          {
+            "Quantity": 2,
+            "Unit": "c. à thé",
+            "Ingredient": "de cacao",
+            "Other": ""
+          },
+          {
+            "Quantity": 0.25,
+            "Unit": "c. à thé",
+            "Ingredient": "de poudre à pâte",
+            "Other": ""
+          },
+          {
+            "Quantity": 3,
+            "Unit": "c. à soupe",
+            "Ingredient": "de lait",
+            "Other": ""
+          },
+          {
+            "Quantity": 1,
+            "Unit": "c. à soupe",
+            "Ingredient": "d'huile de canola",
+            "Other": ""
+          },
+          {
+            "Quantity": 1,
+            "Unit": "goutte",
+            "Ingredient": "d'extrait de vanille",
+            "Other": ""
+          },
+          {
+            "Quantity": 10,
+            "Unit": "pépites",
+            "Ingredient": "de chocolat mi-sucré",
+            "Other": ""
+          }
+        ]
       }
     ],
     "Directions": [
