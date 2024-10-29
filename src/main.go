@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	"github.com/jftrb/mugacke-backend/internal/handlers"
@@ -16,8 +17,10 @@ func main() {
 	
   err := godotenv.Load() 
   if err != nil {
-    log.Fatal().Msg("Error loading .env file")
-		return
+		if os.Getenv("POSTGRES_DATABASE") != "verceldb"{
+			log.Fatal().Msg("Error loading .env file")
+			return
+		}
   }
 
 	var r *chi.Mux = chi.NewRouter()
