@@ -183,3 +183,6 @@ Content-Type: application/json
 
 ###
 DELETE {{baseUrl}}/api/recipes/3
+
+###
+OPTIONS {{baseUrl}}/api/recipes/summaries

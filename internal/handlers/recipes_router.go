@@ -17,13 +17,20 @@ func RecipeRouter() chi.Router {
 	recipeRouter := chi.NewRouter()
 
 	recipeRouter.Get("/summaries", GetRecipeSummaries)
-	recipeRouter.Get("/{recipeID:^[0-9]$}", GetRecipe)
-	recipeRouter.Put("/{recipeID:^[0-9]$}", PutRecipe)
-	recipeRouter.Delete("/{recipeID:^[0-9]$}", DeleteRecipe)
+	recipeRouter.Options("/summaries", middleware.CorsPreflight)
+
+	recipeIdRoute := "/{recipeID:^[0-9]$}"
+	recipeRouter.Get(recipeIdRoute, GetRecipe)
+	recipeRouter.Put(recipeIdRoute, PutRecipe)
+	recipeRouter.Delete(recipeIdRoute, DeleteRecipe)
+	recipeRouter.Options(recipeIdRoute, middleware.CorsPreflight)
+
 	recipeRouter.Post("/", PostRecipe)
+	recipeRouter.Options("/", middleware.CorsPreflight)
 	return recipeRouter
 }
 
+// TODO : Paginate summaries
 func GetRecipeSummaries(w http.ResponseWriter, r *http.Request) {
 	db := dbwrapper.NewDbWrapper()
 	defer db.Disconnect()
