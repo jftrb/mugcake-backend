@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
-	dbwrapper "github.com/jftrb/mugacke-backend/internal/dbWrapper"
+	"github.com/jftrb/mugacke-backend/internal/dbWrapper"
 	"github.com/jftrb/mugacke-backend/internal/middleware"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/jftrb/mugacke-backend/src/api/models"
@@ -22,6 +22,7 @@ func RecipeRouter() chi.Router {
 	recipeIdRoute := "/{recipeID:^[0-9]$}"
 	recipeRouter.Get(recipeIdRoute, GetRecipe)
 	recipeRouter.Put(recipeIdRoute, PutRecipe)
+	recipeRouter.Patch(recipeIdRoute, PatchRecipe)
 	recipeRouter.Delete(recipeIdRoute, DeleteRecipe)
 	recipeRouter.Options(recipeIdRoute, middleware.CorsPreflight)
 
@@ -124,7 +125,33 @@ func PutRecipe(w http.ResponseWriter, r *http.Request) {
 
 	db := dbwrapper.NewDbWrapper()
 	defer db.Disconnect()
-	if err := db.UpdateRecipe(recipeID, recipe); err != nil {
+	if err := db.PutRecipe(recipeID, recipe); err != nil {
+		log.Err(err).Msg("Error - unable to Put Recipe.")
+		api.RequestErrorHandler(w, err)
+	}
+}
+
+// TODO : create new tags if not exist
+func PatchRecipe(w http.ResponseWriter, r *http.Request) {
+	sRecipeID := chi.URLParam(r, "recipeID")
+
+	recipeID, err := strconv.Atoi(sRecipeID)
+	if err != nil {
+		log.Err(err).Msg("URL Param 'recipeID' is of an invalid format.")
+		api.RequestErrorHandler(w, err)
+		return
+	}
+
+	patchRequest , err := middleware.DecodeQueryParams[api.PatchRecipeRequest](w, r)
+	if err != nil {
+		log.Err(err).Msg("Invalid PATCH Recipe query params")
+		api.RequestErrorHandler(w, err)
+		return
+	}
+
+	db := dbwrapper.NewDbWrapper()
+	defer db.Disconnect()
+	if err := db.PatchRecipe(recipeID, patchRequest.Favorite); err != nil {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
 		api.RequestErrorHandler(w, err)
 	}

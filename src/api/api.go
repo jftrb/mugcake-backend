@@ -15,6 +15,10 @@ type Error struct {
 	Message string
 }
 
+type GetExtractorKeyResponse struct {
+	Key string
+}
+
 type GetUsersResponse struct {
 	Users 	[]models.User
 }
@@ -29,6 +33,10 @@ type GetRecipeResponse struct {
 
 type PostRecipeResponse struct {
 	ID int
+}
+
+type PatchRecipeRequest struct {
+	Favorite bool
 }
 
 

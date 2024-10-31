@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/go-chi/chi"
 	chimiddle "github.com/go-chi/chi/middleware"
 	"github.com/jftrb/mugacke-backend/internal/middleware"
+	"github.com/jftrb/mugacke-backend/src/api"
 )
 
 func MainHandler(r *chi.Mux) {
@@ -25,5 +27,11 @@ func ApiRouter() chi.Router {
 
 	router.Mount("/recipes", RecipeRouter())
 	router.Mount("/users", UserRouter())
+	router.Get("/extractor/key", GetRecipeExtractorKey)
 	return router
+}
+
+func GetRecipeExtractorKey(w http.ResponseWriter, r *http.Request) {
+	response := api.GetExtractorKeyResponse{Key: os.Getenv("GEMINI_API_KEY")}
+	middleware.EncodeResponse(w, response)
 }

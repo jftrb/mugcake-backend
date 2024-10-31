@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/schema"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/rs/zerolog/log"
 )
@@ -18,7 +19,7 @@ const (
 var validMethods []string = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 var validHeaders []string = []string{"content-type", "accept"}
 
-func EncodeResponse(w http.ResponseWriter, response any) {
+func EncodeResponse[T any](w http.ResponseWriter, response T) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(response)
@@ -26,6 +27,18 @@ func EncodeResponse(w http.ResponseWriter, response any) {
 		log.Err(err).Msg("Error during response JSON encoding.")
 		api.InternalErrorHandler(w)
 	}
+}
+
+func DecodeQueryParams[T any](w http.ResponseWriter, r *http.Request) (T, error) {
+	var params T
+	decoder := schema.NewDecoder()
+	decoder.IgnoreUnknownKeys(true)
+	err := decoder.Decode(&params, r.URL.Query()); 
+	if err != nil {
+		log.Err(err).Msg("Error while decoding query params")
+	}
+
+	return params, err
 }
 
 func CorsAllowOrigin(next http.Handler) http.Handler {
