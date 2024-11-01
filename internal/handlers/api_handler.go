@@ -28,6 +28,7 @@ func ApiRouter() chi.Router {
 	router.Mount("/recipes", RecipeRouter())
 	router.Mount("/users", UserRouter())
 	router.Get("/extractor/key", GetRecipeExtractorKey)
+	router.Options("/extractor/key", middleware.CorsPreflight)
 	return router
 }
 
