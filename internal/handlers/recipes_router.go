@@ -19,7 +19,7 @@ func RecipeRouter() chi.Router {
 	recipeRouter.Get("/summaries", GetRecipeSummaries)
 	recipeRouter.Options("/summaries", middleware.CorsPreflight)
 
-	recipeIdRoute := "/{recipeID:^[0-9]$}"
+	recipeIdRoute := "/{recipeID:^[0-9]+$}"
 	recipeRouter.Get(recipeIdRoute, GetRecipe)
 	recipeRouter.Put(recipeIdRoute, PutRecipe)
 	recipeRouter.Patch(recipeIdRoute, PatchRecipe)
