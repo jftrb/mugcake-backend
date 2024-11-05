@@ -29,9 +29,8 @@ Content-Type: application/json
     "Tags": [
       "Dessert",
       "Easy",
-      "Tag 2",
-      "Tag 2",
-      "Really Long Tag 3"
+      "newtag1",
+      "newtag2"
     ],
     "IngredientSections": [
       {
