@@ -129,6 +129,8 @@ func PutRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
 		api.RequestErrorHandler(w, err)
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // TODO : create new tags if not exist
@@ -155,6 +157,8 @@ func PatchRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
 		api.RequestErrorHandler(w, err)
 	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
@@ -172,4 +176,6 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		log.Err(err).Msg("Error - unable to Delete Recipe.")
 		api.RequestErrorHandler(w, err)
 	}
+
+	w.WriteHeader(http.StatusOK)
 }

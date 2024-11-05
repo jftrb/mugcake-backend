@@ -187,13 +187,13 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{baseUrl}}/api/recipes/10
+DELETE {{baseUrl}}/api/recipes/14
 
 ###
 OPTIONS {{baseUrl}}/api/recipes/summaries
 
 ###
-PATCH {{baseUrl}}/api/recipes/2?favorite=false
+PATCH {{baseUrl}}/api/recipes/8?favorite=false
 
 ###
 GET {{baseUrl}}/api/extractor/key
