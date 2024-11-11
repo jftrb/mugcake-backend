@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/jftrb/mugacke-backend/internal/dbWrapper"
+	"github.com/jftrb/mugacke-backend/internal/encoders"
 	"github.com/jftrb/mugacke-backend/internal/middleware"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/jftrb/mugacke-backend/src/api/models"
@@ -16,8 +18,11 @@ import (
 func RecipeRouter() chi.Router {
 	recipeRouter := chi.NewRouter()
 
-	recipeRouter.Get("/summaries", GetRecipeSummaries)
-	recipeRouter.Options("/summaries", middleware.CorsPreflight)
+	recipeRouter.Route("/summaries", func(r chi.Router) {
+		r.Use(middleware.Paginate[api.RecipeSummaryPaginationRequest])
+		r.Get("/", GetRecipeSummaries)
+		r.Options("/", middleware.CorsPreflight)
+	})
 
 	recipeIdRoute := "/{recipeID:^[0-9]+$}"
 	recipeRouter.Get(recipeIdRoute, GetRecipe)
@@ -33,22 +38,37 @@ func RecipeRouter() chi.Router {
 
 // TODO : Paginate summaries
 func GetRecipeSummaries(w http.ResponseWriter, r *http.Request) {
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 
 	userId := "18c47dfb-442f-423a-b0cd-70c8076cb7a9"
-	summaries, err := db.GetRecipeSummaries(userId)
+	pagination := r.Context().Value(middleware.ContextKeyPagination).(api.RecipeSummaryPaginationRequest)
+	searchParams := r.Context().Value(middleware.ContextKeySearchParams).(api.RecipeSearchRequest)
+
+	summaries, err := db.GetRecipeSummaries(userId, pagination, searchParams)
 	if err != nil {
 		log.Err(err).Msg("Error during Get Recipe Summaries operation.")
 		api.RequestErrorHandler(w, err)
 		return
 	}
 	
+	encodedNextCursor := getNextCursor(len(summaries), pagination)
 	response := api.GetRecipeSummariesResponse{
 		Summaries: summaries,
+		NextCursor: encodedNextCursor,
 	}
 	
 	middleware.EncodeResponse(w, response)
+}
+
+func getNextCursor(resultsLength int, pagination api.RecipeSummaryPaginationRequest) string {
+	encodedNextCursor := ""
+	if resultsLength > pagination.Limit {
+		nextOffset := pagination.Offset + pagination.Limit
+		nextCursor := fmt.Sprintf("offset:%d", nextOffset)
+		encodedNextCursor = encoders.EncodeToBase64(nextCursor)
+	}
+	return encodedNextCursor
 }
 
 
@@ -61,7 +81,7 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 
 	recipe, err := db.GetRecipe(recipeID)
@@ -89,7 +109,7 @@ func PostRecipe(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().Str("Recipe Title", recipe.Title).Msg("Posting Recipe")
 
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 
 	userId := "18c47dfb-442f-423a-b0cd-70c8076cb7a9"
@@ -123,7 +143,7 @@ func PutRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 	if err := db.PutRecipe(recipeID, recipe); err != nil {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
@@ -144,14 +164,14 @@ func PatchRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	patchRequest , err := middleware.DecodeQueryParams[api.PatchRecipeRequest](w, r)
+	patchRequest , err := middleware.DecodeQueryParams[api.PatchRecipeRequest](r.URL.Query())
 	if err != nil {
 		log.Err(err).Msg("Invalid PATCH Recipe query params")
 		api.RequestErrorHandler(w, err)
 		return
 	}
 
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 	if err := db.PatchRecipe(recipeID, patchRequest.Favorite); err != nil {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
@@ -170,7 +190,7 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbwrapper.NewDbWrapper()
+	db := dbWrapper.NewDbWrapper()
 	defer db.Disconnect()
 	if err := db.DeleteRecipe(recipeID); err != nil {
 		log.Err(err).Msg("Error - unable to Delete Recipe.")

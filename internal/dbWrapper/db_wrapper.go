@@ -1,4 +1,4 @@
-package dbwrapper
+package dbWrapper
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/jftrb/mugacke-backend/src/api/models"
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +16,7 @@ import (
 type DbWrapper interface {
 	Disconnect() error
 	GetUsers() ([]models.User, error)
-	GetRecipeSummaries(userID string) ([]models.RecipeSummary, error)
+	GetRecipeSummaries(userID string, paginationToken api.RecipeSummaryPaginationRequest, searchParams api.RecipeSearchRequest) ([]models.RecipeSummary, error)
 	GetRecipe(recipeID int) (models.Recipe, error)
 	AddRecipe(userID string, recipe models.Recipe) (int, error)
 	PutRecipe(recipeID int, recipe models.Recipe) (error)
@@ -87,7 +88,9 @@ func (d *dbwrapper) GetUsers() ([]models.User, error) {
 	})
 }
 
-func (d *dbwrapper) GetRecipeSummaries(userID string) ([]models.RecipeSummary, error) {
+func (d *dbwrapper) GetRecipeSummaries(userID string, paginationToken api.RecipeSummaryPaginationRequest, searchParams api.RecipeSearchRequest) ([]models.RecipeSummary, error) {
+	sortQuery := BuildSortQuery(searchParams.SortBy)
+	searchQuery := BuildSearchQuery(searchParams)
 	rows, err := d.client.Query(context.Background(), 
 	`SELECT id as recipeId, favorite, title, image_source, prep_info->>'totalTime' as total_time
 			, ARRAY (
@@ -96,7 +99,8 @@ func (d *dbwrapper) GetRecipeSummaries(userID string) ([]models.RecipeSummary, e
 						JOIN   tags ON tags.id = a.tag_id
 						ORDER  BY a.ord
 						)  AS tags
-	FROM recipes r WHERE r.user_id = $1`, userID)
+	FROM recipes r 
+	WHERE r.user_id = $1 AND ` + searchQuery + " " + sortQuery, userID)
 
 	if err != nil {
 		return []models.RecipeSummary{}, err
@@ -123,7 +127,12 @@ func (d *dbwrapper) GetRecipe(recipeID int) (models.Recipe, error) {
 		return models.Recipe{}, err
 	}
 
-	return pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[models.Recipe])
+	recipe, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[models.Recipe])
+	
+	d.client.Exec(context.Background(),
+	`UPDATE recipes SET last_viewed = current_timestamp WHERE id = $1`, recipeID)
+	
+	return recipe, err
 }
 
 func (d *dbwrapper)	AddRecipe(userID string, recipe models.Recipe) (int, error) {
@@ -188,7 +197,7 @@ func (d *dbwrapper)	PutRecipe(recipeID int, recipe models.Recipe) (error) {
 
 	timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second * 2)
 	_, err = d.client.Exec(timeoutCtx, 
-	`UPDATE recipes SET (title, url, image_source, prep_info, tags, ingredientSections, directions, notes) = 
+	`UPDATE recipes SET (title, url, image_source, prep_info, tags, ingredientSections, directions, notes, modified) = 
 	(
 		$1, $2, $3, $4,
 		ARRAY (
@@ -197,10 +206,11 @@ func (d *dbwrapper)	PutRecipe(recipeID int, recipe models.Recipe) (error) {
 			JOIN   tags ON tags.name = a.tag_name
 			ORDER  BY a.ord
 		),
-		$6, $7, $8)
+		$6, $7, $8, current_timestamp)
 		WHERE id = $9`, recipe.Title, recipe.URL, recipe.ImageSource, prepInfo, recipe.Tags, ingredientSections, recipe.Directions, recipe.Notes, recipeID)
 
 	cancelFunc()
+
 	return err
 }
 
