@@ -7,7 +7,7 @@ import (
 	"github.com/jftrb/mugacke-backend/src/api"
 )
 
-func ParseSummariesParams(next http.Handler) http.Handler {
+func ParseSummariesSearchParams(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		searchParams, err := DecodeQueryParams[api.RecipeSearchRequest](r.URL.Query())
 		if err != nil {

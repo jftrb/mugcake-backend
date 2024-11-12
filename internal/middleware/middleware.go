@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/gorilla/schema"
@@ -18,6 +17,7 @@ type ContextKey string
 const (
 	ContextKeyRecipeId ContextKey = "pageToken"
 	ContextKeyPagination ContextKey = "pagination"
+	ContextKeyCursorParams ContextKey = "cursorParams"
 	ContextKeySearchParams ContextKey = "searchParams"
 )
 
@@ -34,7 +34,7 @@ func EncodeResponse[T any](w http.ResponseWriter, response T) {
 	}
 }
 
-func DecodeQueryParams[T any](query url.Values) (T, error) {
+func DecodeQueryParams[T any](query map[string][]string) (T, error) {
 	var params T
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
@@ -47,48 +47,51 @@ func DecodeQueryParams[T any](query url.Values) (T, error) {
 	return params, err
 }
 
+func Paginate[T any](defaultLimit int) func (http.Handler) http.Handler {
+	return func (next http.Handler) http.Handler {
+		return paginate[T](next, defaultLimit)
+	}
+}
+
 // Parses query for valid pagination parameters and passes them to context.
-func Paginate[T any](next http.Handler) http.Handler {
+func paginate[T any](next http.Handler, defaultLimit int) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		queryParams, err := decodePaginationParams(r.URL.Query())
+		pageRequest, err := DecodeQueryParams[api.PaginationRequest](r.URL.Query())
+		if err != nil {
+			log.Err(err).Msg("Error while decoding Pagination Request from url.")
+			return
+		}
+
+		if pageRequest.Limit == 0 {
+			pageRequest.Limit = defaultLimit
+		}
+
+		queryParams, err := DecodeCursorParams[T](pageRequest.Cursor)
 		if err != nil {
 			api.RequestErrorHandler(w, err)
 			return
 		}
 
-		var paginationParams T
-		decoder := schema.NewDecoder()
-		decoder.IgnoreUnknownKeys(true)
-		if err := decoder.Decode(&paginationParams, queryParams); err != nil {
-			log.Err(err).Msg("Error while decoding Pagination query params")
-			api.RequestErrorHandler(w, err)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), ContextKeyPagination, paginationParams)
+		ctx := context.WithValue(r.Context(), ContextKeyPagination, pageRequest)
+		ctx = context.WithValue(ctx, ContextKeyCursorParams, *queryParams)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 
 	return http.HandlerFunc(fn)
 }
 
-func decodePaginationParams(query url.Values) (map[string][]string, error) {
-	request, err := DecodeQueryParams[api.PaginationRequest](query)
+func DecodeCursorParams[T any](cursor string) (*T, error) {
+	nextCursor, err := encoders.DecodeBase64(cursor)
 	if err != nil {
-		log.Err(err).Msg("Error while decoding Pagination Cursor from url.")
+		log.Err(err).Str("Cursor", cursor).Msg("Error while decoding Cursor from base64.")
 		return nil, err
 	}
 
-	nextCursor, err := encoders.DecodeBase64(request.Cursor)
-	if err != nil {
-		log.Err(err).Str("Cursor", request.Cursor).Msg("Error while decoding Cursor from base64.")
-		return nil, err
-	}
-
-	params := strings.Split(nextCursor, ",")
-	out := map[string][]string{}
-	for key, val := range query {
-		out[key] = val
+	cursorParams := map[string][]string{}
+	
+	params := []string{}
+	if len(cursor) > 0 {
+		params = strings.Split(nextCursor, ",")
 	}
 
 	for _, param := range params {
@@ -101,10 +104,16 @@ func decodePaginationParams(query url.Values) (map[string][]string, error) {
 
 		key := keyValuePair[0]
 		value := keyValuePair[1]
-		out[key] = []string{value}
+		cursorParams[key] = []string{value}
+	}
+
+	out, err := DecodeQueryParams[T](cursorParams)
+	if err != nil {
+		log.Err(err).Msg("Error while decoding Cursor query params")
+		return nil, err
 	}
 	
-	return out, nil
+	return &out, nil
 }
 
 func CorsAllowOrigin(next http.Handler) http.Handler {

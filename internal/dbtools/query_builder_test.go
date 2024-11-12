@@ -1,9 +1,9 @@
-package dbWrapper_test
+package dbtools_test
 
 import (
 	"testing"
 
-	"github.com/jftrb/mugacke-backend/internal/dbWrapper"
+	"github.com/jftrb/mugacke-backend/internal/dbtools"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,7 +27,7 @@ func Test_ApplySort(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sortString := dbWrapper.ApplySort(tt.args.sort)
+			sortString := dbtools.ApplySort(tt.args.sort)
 			assert.Equal(t, tt.expectedString, sortString)
 		})
 	}
@@ -37,7 +37,7 @@ func Test_BuildSortQuery(t *testing.T) {
 	sortArray := []api.Sort{api.Favorite, -api.Newest}
 
 	expectedSortQuery := "ORDER BY favorite DESC,created"
-	sortQuery := dbWrapper.BuildSortQuery(sortArray)
+	sortQuery := dbtools.BuildSortQuery(sortArray)
 	assert.Equal(t, expectedSortQuery, sortQuery)
 }
 
@@ -58,7 +58,7 @@ func Test_BuildSearchQuery(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			searchParams := api.RecipeSearchRequest{Query: tt.args.query, Tags: tt.args.tags}
-			sortString := dbWrapper.BuildSearchQuery(searchParams)
+			sortString := dbtools.BuildSearchQuery(searchParams)
 
 			assert.Contains(t, sortString, tt.expectedSubstring)
 		})

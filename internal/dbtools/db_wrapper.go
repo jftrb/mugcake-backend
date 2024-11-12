@@ -1,4 +1,4 @@
-package dbWrapper
+package dbtools
 
 import (
 	"context"
@@ -13,10 +13,16 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type GetSummariesContext struct {
+	Limit int
+	Offset int
+	SearchParams api.RecipeSearchRequest
+}
+
 type DbWrapper interface {
 	Disconnect() error
 	GetUsers() ([]models.User, error)
-	GetRecipeSummaries(userID string, paginationToken api.RecipeSummaryPaginationRequest, searchParams api.RecipeSearchRequest) ([]models.RecipeSummary, error)
+	GetRecipeSummaries(userID string, context GetSummariesContext) ([]models.RecipeSummary, error)
 	GetRecipe(recipeID int) (models.Recipe, error)
 	AddRecipe(userID string, recipe models.Recipe) (int, error)
 	PutRecipe(recipeID int, recipe models.Recipe) (error)
@@ -62,7 +68,7 @@ func NewDbWrapper() DbWrapper {
 		log.Error().AnErr("Error", err).Msg("Connected to Postgres but unable to communicate: Initial Ping failed.")
 		panic(err)
 	}
-	log.Info().Msg("Pinged your deployment. You successfully connected to Postgres!")
+	log.Debug().Msg("Pinged your deployment. You successfully connected to Postgres!")
 
 	return &dbwrapper{client: client}
 }
@@ -88,9 +94,10 @@ func (d *dbwrapper) GetUsers() ([]models.User, error) {
 	})
 }
 
-func (d *dbwrapper) GetRecipeSummaries(userID string, paginationToken api.RecipeSummaryPaginationRequest, searchParams api.RecipeSearchRequest) ([]models.RecipeSummary, error) {
-	sortQuery := BuildSortQuery(searchParams.SortBy)
-	searchQuery := BuildSearchQuery(searchParams)
+func (d *dbwrapper) GetRecipeSummaries(userID string, ctx GetSummariesContext) ([]models.RecipeSummary, error) {
+	sortQuery := BuildSortQuery(ctx.SearchParams.SortBy)
+	searchQuery := BuildSearchQuery(ctx.SearchParams)
+	log.Debug().Int("Limit", ctx.Limit).Int("Offset", ctx.Offset).Msg("Pagination values")
 	rows, err := d.client.Query(context.Background(), 
 	`SELECT id as recipeId, favorite, title, image_source, prep_info->>'totalTime' as total_time
 			, ARRAY (
@@ -100,7 +107,8 @@ func (d *dbwrapper) GetRecipeSummaries(userID string, paginationToken api.Recipe
 						ORDER  BY a.ord
 						)  AS tags
 	FROM recipes r 
-	WHERE r.user_id = $1 AND ` + searchQuery + " " + sortQuery, userID)
+	WHERE r.user_id = $1 AND ` + searchQuery + " " + sortQuery + `
+	LIMIT $2 OFFSET $3`, userID, ctx.Limit + 1, ctx.Offset)
 
 	if err != nil {
 		return []models.RecipeSummary{}, err

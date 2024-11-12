@@ -1,4 +1,4 @@
-package dbWrapper
+package dbtools
 
 import (
 	"fmt"
@@ -8,13 +8,24 @@ import (
 	"github.com/jftrb/mugacke-backend/src/api"
 )
 
+// Search behaviour :
+// Only Query present, search in Title or in Tags (TODO: or in Ingredients)
+// Only Tags present, search in tags and all tags must be present
+// Query + Tags, search a title that has all tags present
 func BuildSearchQuery(searchParams api.RecipeSearchRequest) string {
 	// Query is substring of Title
 	out := fmt.Sprintf(`position(LOWER('%s') in LOWER(title)) > 0 `, searchParams.Query)
-	tagsToSearch := append(searchParams.Tags, searchParams.Query)
+
+	tagsToSearch := searchParams.Tags
+	joinMethod := "AND "
+	if len(tagsToSearch) == 0 {
+		joinMethod = "OR "
+		tagsToSearch = append(searchParams.Tags, searchParams.Query)
+	}
 
 	// AND ARRAY[LOWER('Tag 1'), LOWER('Tag 2')] <@ tags
-	out += fmt.Sprintf("AND ARRAY[LOWER('%s')] ", strings.Join(tagsToSearch, "'), LOWER('"))
+	out += joinMethod
+	out += fmt.Sprintf("ARRAY[LOWER('%s')] ", strings.Join(tagsToSearch, "'), LOWER('"))
 	out += `<@ ARRAY (
 					SELECT LOWER(tags.name)
 					FROM   unnest(r.tags) AS a(tag_id)

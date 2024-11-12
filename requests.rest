@@ -1,10 +1,10 @@
-@baseUrl = http://192.168.18.12:1128
+@baseUrl = http://localhost:1128
 
 GET {{baseUrl}}/api/users
 
 ###
 
-GET {{baseUrl}}/api/recipes/summaries
+GET {{baseUrl}}/api/recipes/summaries?limit=1&query=tag 2&cursor=b2Zmc2V0OjE%3d
 
 ###
 
