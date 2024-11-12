@@ -4,7 +4,7 @@ GET {{baseUrl}}/api/users
 
 ###
 
-GET {{baseUrl}}/api/recipes/summaries?limit=1&query=tag 2&cursor=b2Zmc2V0OjE%3d
+GET {{baseUrl}}/api/recipes/summaries?limit=2&query=tofu&tags=
 
 ###
 

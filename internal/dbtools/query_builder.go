@@ -3,6 +3,7 @@ package dbtools
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strings"
 
 	"github.com/jftrb/mugacke-backend/src/api"
@@ -16,7 +17,7 @@ func BuildSearchQuery(searchParams api.RecipeSearchRequest) string {
 	// Query is substring of Title
 	out := fmt.Sprintf(`position(LOWER('%s') in LOWER(title)) > 0 `, searchParams.Query)
 
-	tagsToSearch := searchParams.Tags
+	tagsToSearch := slices.DeleteFunc(searchParams.Tags, func(s string) bool {return s == ""})
 	joinMethod := "AND "
 	if len(tagsToSearch) == 0 {
 		joinMethod = "OR "

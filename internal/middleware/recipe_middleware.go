@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/jftrb/mugacke-backend/src/api"
+	"github.com/rs/zerolog/log"
 )
 
 func ParseSummariesSearchParams(next http.Handler) http.Handler {
@@ -15,7 +16,10 @@ func ParseSummariesSearchParams(next http.Handler) http.Handler {
 			return
 		}
 
+		log.Debug().Msg(r.URL.Query().Get("tags"))
+		log.Debug().Int("tags length", len(searchParams.Tags)).Send()
 		if searchParams.Tags == nil {
+			log.Debug().Msg("nil")
 			searchParams.Tags = []string{}
 		}
 
