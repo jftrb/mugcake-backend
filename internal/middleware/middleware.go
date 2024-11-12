@@ -1,11 +1,13 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/schema"
+	"github.com/jftrb/mugacke-backend/internal/encoders"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/rs/zerolog/log"
 )
@@ -14,6 +16,9 @@ type ContextKey string
 
 const (
 	ContextKeyRecipeId ContextKey = "pageToken"
+	ContextKeyPagination ContextKey = "pagination"
+	ContextKeyCursorParams ContextKey = "cursorParams"
+	ContextKeySearchParams ContextKey = "searchParams"
 )
 
 var validMethods []string = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
@@ -29,16 +34,86 @@ func EncodeResponse[T any](w http.ResponseWriter, response T) {
 	}
 }
 
-func DecodeQueryParams[T any](w http.ResponseWriter, r *http.Request) (T, error) {
+func DecodeQueryParams[T any](query map[string][]string) (T, error) {
 	var params T
 	decoder := schema.NewDecoder()
 	decoder.IgnoreUnknownKeys(true)
-	err := decoder.Decode(&params, r.URL.Query()); 
+	decoder.ZeroEmpty(true)
+	err := decoder.Decode(&params, query); 
 	if err != nil {
 		log.Err(err).Msg("Error while decoding query params")
 	}
 
 	return params, err
+}
+
+func Paginate[T any](defaultLimit int) func (http.Handler) http.Handler {
+	return func (next http.Handler) http.Handler {
+		return paginate[T](next, defaultLimit)
+	}
+}
+
+// Parses query for valid pagination parameters and passes them to context.
+func paginate[T any](next http.Handler, defaultLimit int) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		pageRequest, err := DecodeQueryParams[api.PaginationRequest](r.URL.Query())
+		if err != nil {
+			log.Err(err).Msg("Error while decoding Pagination Request from url.")
+			return
+		}
+
+		if pageRequest.Limit == 0 {
+			pageRequest.Limit = defaultLimit
+		}
+
+		queryParams, err := DecodeCursorParams[T](pageRequest.Cursor)
+		if err != nil {
+			api.RequestErrorHandler(w, err)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), ContextKeyPagination, pageRequest)
+		ctx = context.WithValue(ctx, ContextKeyCursorParams, *queryParams)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+
+	return http.HandlerFunc(fn)
+}
+
+func DecodeCursorParams[T any](cursor string) (*T, error) {
+	nextCursor, err := encoders.DecodeBase64(cursor)
+	if err != nil {
+		log.Err(err).Str("Cursor", cursor).Msg("Error while decoding Cursor from base64.")
+		return nil, err
+	}
+
+	cursorParams := map[string][]string{}
+	
+	params := []string{}
+	if len(cursor) > 0 {
+		params = strings.Split(nextCursor, ",")
+	}
+
+	for _, param := range params {
+		keyValuePair := strings.Split(param, ":")
+		if len(keyValuePair) != 2 {
+			err := api.ErrBadQuery
+			log.Err(err).Str("KeyValue Pair", param).Msg("Error while trying to parse KeyValue Pair.")
+			return nil, err
+		}
+
+		key := keyValuePair[0]
+		value := keyValuePair[1]
+		cursorParams[key] = []string{value}
+	}
+
+	out, err := DecodeQueryParams[T](cursorParams)
+	if err != nil {
+		log.Err(err).Msg("Error while decoding Cursor query params")
+		return nil, err
+	}
+	
+	return &out, nil
 }
 
 func CorsAllowOrigin(next http.Handler) http.Handler {

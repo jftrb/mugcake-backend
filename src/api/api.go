@@ -25,6 +25,7 @@ type GetUsersResponse struct {
 
 type GetRecipeSummariesResponse struct {
 	Summaries 	[]models.RecipeSummary
+	NextCursor	string
 }
 
 type GetRecipeResponse struct {

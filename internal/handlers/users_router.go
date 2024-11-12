@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	dbwrapper "github.com/jftrb/mugacke-backend/internal/dbWrapper"
+	"github.com/jftrb/mugacke-backend/internal/dbtools"
 	"github.com/jftrb/mugacke-backend/internal/middleware"
 	"github.com/jftrb/mugacke-backend/src/api"
 	"github.com/rs/zerolog/log"
@@ -19,7 +19,7 @@ func UserRouter() chi.Router {
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	db := dbwrapper.NewDbWrapper()
+	db := dbtools.NewDbWrapper()
 	defer db.Disconnect()
 
 	users, err := db.GetUsers()
