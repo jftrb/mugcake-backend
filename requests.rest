@@ -1,18 +1,18 @@
 @baseUrl = http://localhost:1128
 
-GET {{baseUrl}}/api/users
+GET {{baseUrl}}/api/dev/users
 
 ###
 
-GET {{baseUrl}}/api/recipes/summaries?limit=2&query=tofu&tags=
+GET {{baseUrl}}/api/dev/recipes/summaries?limit=5&query=&tags=
 
 ###
 
-GET {{baseUrl}}/api/recipes/1
+GET {{baseUrl}}/api/dev/recipes/1
 Content-Type: application/json
 
 ###
-POST {{baseUrl}}/api/recipes
+POST {{baseUrl}}/api/dev/recipes
 Content-Type: application/json
 
 {
@@ -99,7 +99,7 @@ Content-Type: application/json
 Content-Type: application/json
 
 ###
-PUT {{baseUrl}}/api/recipes/11
+PUT {{baseUrl}}/api/dev/recipes/11
 Content-Type: application/json
 
 {
@@ -187,13 +187,13 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{baseUrl}}/api/recipes/14
+DELETE {{baseUrl}}/api/dev/recipes/14
 
 ###
-OPTIONS {{baseUrl}}/api/recipes/summaries
+OPTIONS {{baseUrl}}/api/dev/recipes/summaries
 
 ###
-PATCH {{baseUrl}}/api/recipes/8?favorite=false
+PATCH {{baseUrl}}/api/dev/recipes/8?favorite=false
 
 ###
-GET {{baseUrl}}/api/extractor/key
+GET {{baseUrl}}/api/dev/extractor/key

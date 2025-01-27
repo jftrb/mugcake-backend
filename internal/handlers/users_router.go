@@ -19,7 +19,8 @@ func UserRouter() chi.Router {
 }
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	users, err := db.GetUsers()

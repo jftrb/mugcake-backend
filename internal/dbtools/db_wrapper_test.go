@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const schema string = "dev"
+
 func TestMain(m *testing.M) {
 	log.Info().Msg("Setting up test")
   godotenv.Load("../../.env") 
@@ -20,7 +22,7 @@ func TestMain(m *testing.M) {
 func Test_dbWrapper_GetRecipe(t *testing.T) {
 	assert.NotEmpty(t, os.Getenv("POSTGRES_URL"))
 
-	db := dbtools.NewDbWrapper()
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	recipe, err := db.GetRecipe(2)
@@ -32,7 +34,7 @@ func Test_dbWrapper_GetRecipe(t *testing.T) {
 func Test_dbWrapper_GetRecipeSummaries(t *testing.T) {
 	assert.NotEmpty(t, os.Getenv("POSTGRES_URL"))
 
-	db := dbtools.NewDbWrapper()
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	

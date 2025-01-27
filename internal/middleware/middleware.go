@@ -3,9 +3,12 @@ package middleware
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"slices"
 	"strings"
 
+	"github.com/go-chi/chi"
 	"github.com/gorilla/schema"
 	"github.com/jftrb/mugacke-backend/internal/encoders"
 	"github.com/jftrb/mugacke-backend/src/api"
@@ -15,6 +18,7 @@ import (
 type ContextKey string
 
 const (
+	ContextKeySchema ContextKey = "schema"
 	ContextKeyRecipeId ContextKey = "pageToken"
 	ContextKeyPagination ContextKey = "pagination"
 	ContextKeyCursorParams ContextKey = "cursorParams"
@@ -23,6 +27,27 @@ const (
 
 var validMethods []string = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
 var validHeaders []string = []string{"content-type", "accept"}
+
+func ValidateSchema(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		schema := chi.URLParam(r, "schema")
+		validSchemas := []string{"", "public", "dev"}
+		if !slices.Contains(validSchemas, schema) {
+			err := errors.New("invalid schema")
+			log.Err(err).Msg("Error while decoding schema from url.")
+			api.RequestErrorHandler(w, err)
+		}
+
+		if strings.EqualFold(schema, "") {
+			schema = "public"
+		}
+
+		ctx := context.WithValue(r.Context(), ContextKeySchema, schema)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+
+	return http.HandlerFunc(fn)
+}
 
 func EncodeResponse[T any](w http.ResponseWriter, response T) {
 	w.Header().Set("Content-Type", "application/json")

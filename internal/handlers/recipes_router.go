@@ -40,7 +40,8 @@ func RecipeRouter() chi.Router {
 
 // TODO : Paginate summaries
 func GetRecipeSummaries(w http.ResponseWriter, r *http.Request) {
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	userId := "18c47dfb-442f-423a-b0cd-70c8076cb7a9"
@@ -84,7 +85,8 @@ func GetRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	recipe, err := db.GetRecipe(recipeID)
@@ -112,7 +114,8 @@ func PostRecipe(w http.ResponseWriter, r *http.Request) {
 
 	log.Debug().Str("Recipe Title", recipe.Title).Msg("Posting Recipe")
 
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 
 	userId := "18c47dfb-442f-423a-b0cd-70c8076cb7a9"
@@ -146,7 +149,8 @@ func PutRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 	if err := db.PutRecipe(recipeID, recipe); err != nil {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
@@ -174,7 +178,8 @@ func PatchRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 	if err := db.PatchRecipe(recipeID, patchRequest.Favorite); err != nil {
 		log.Err(err).Msg("Error - unable to Put Recipe.")
@@ -193,7 +198,8 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := dbtools.NewDbWrapper()
+	schema := r.Context().Value(middleware.ContextKeySchema).(string)
+	db := dbtools.NewDbWrapper(schema)
 	defer db.Disconnect()
 	if err := db.DeleteRecipe(recipeID); err != nil {
 		log.Err(err).Msg("Error - unable to Delete Recipe.")

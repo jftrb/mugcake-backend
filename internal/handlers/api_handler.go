@@ -15,16 +15,13 @@ func MainHandler(r *chi.Mux) {
 	r.Use(chimiddle.Logger)
 	r.Use(middleware.CorsAllowOrigin)
 
-	r.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello World!"))
-	})
-
-	r.Mount("/api", ApiRouter())
+	r.Mount("/api/{schema:^[a-zA-Z0-9]*$}", ApiRouter())
 }
 
 func ApiRouter() chi.Router {
 	router := chi.NewRouter()
-
+	router.Use(middleware.ValidateSchema)
+	
 	router.Mount("/recipes", RecipeRouter())
 	router.Mount("/users", UserRouter())
 	router.Get("/extractor/key", GetRecipeExtractorKey)

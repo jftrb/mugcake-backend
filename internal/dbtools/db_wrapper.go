@@ -32,6 +32,7 @@ type DbWrapper interface {
 
 type dbwrapper struct {
 	client *pgxpool.Conn
+	schema string
 }
 
 var pool *pgxpool.Pool = nil
@@ -54,7 +55,7 @@ func DisconnectAll() {
 }
 
 
-func NewDbWrapper() DbWrapper {
+func NewDbWrapper(schema string) DbWrapper {
 	ConnectPool()
 
 	client, err := pool.Acquire(context.Background())
@@ -70,7 +71,7 @@ func NewDbWrapper() DbWrapper {
 	}
 	log.Debug().Msg("Pinged your deployment. You successfully connected to Postgres!")
 
-	return &dbwrapper{client: client}
+	return &dbwrapper{client: client, schema: schema}
 }
 
 func (d *dbwrapper) Disconnect() error {
@@ -81,7 +82,7 @@ func (d *dbwrapper) Disconnect() error {
 }
 
 func (d *dbwrapper) GetUsers() ([]models.User, error) {
-	rows, err := d.client.Query(context.Background(), "SELECT (id, email) from users")
+	rows, err := d.client.Query(context.Background(), `SELECT (id, email) FROM ` + d.schema + `.users`)
 	if err != nil {
 		return []models.User{}, err
 	}
@@ -106,7 +107,7 @@ func (d *dbwrapper) GetRecipeSummaries(userID string, ctx GetSummariesContext) (
 						JOIN   tags ON tags.id = a.tag_id
 						ORDER  BY a.ord
 						)  AS tags
-	FROM recipes r 
+	FROM ` + d.schema + `.recipes r 
 	WHERE r.user_id = $1 AND ` + searchQuery + " " + sortQuery + `
 	LIMIT $2 OFFSET $3`, userID, ctx.Limit + 1, ctx.Offset)
 
@@ -122,14 +123,14 @@ func (d *dbwrapper) GetRecipeSummaries(userID string, ctx GetSummariesContext) (
 
 func (d *dbwrapper) GetRecipe(recipeID int) (models.Recipe, error) {
 	rows, err := d.client.Query(context.Background(), 
-	`SELECT favorite, title, url, image_source, prep_info, ingredientSections, directions, notes
+	`SELECT favorite, title, url, image_source, prep_info, ingredient_sections, directions, notes
 			, ARRAY (
 						SELECT tags.name
 						FROM   unnest(r.tags) WITH ORDINALITY AS a(tag_id, ord)
 						JOIN   tags ON tags.id = a.tag_id
 						ORDER  BY a.ord
 						)  AS tags
-	FROM recipes r WHERE r.id = $1`, recipeID)
+	FROM ` + d.schema + `.recipes r WHERE r.id = $1`, recipeID)
 
 	if err != nil {
 		return models.Recipe{}, err
@@ -138,7 +139,7 @@ func (d *dbwrapper) GetRecipe(recipeID int) (models.Recipe, error) {
 	recipe, err := pgx.CollectExactlyOneRow(rows, pgx.RowToStructByName[models.Recipe])
 	
 	d.client.Exec(context.Background(),
-	`UPDATE recipes SET last_viewed = current_timestamp WHERE id = $1`, recipeID)
+	`UPDATE ` + d.schema + `.recipes SET last_viewed = current_timestamp WHERE id = $1`, recipeID)
 	
 	return recipe, err
 }
@@ -161,7 +162,7 @@ func (d *dbwrapper)	AddRecipe(userID string, recipe models.Recipe) (int, error) 
 	
 	timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second * 2)
 	rows, err := d.client.Query(timeoutCtx, 
-	`INSERT INTO recipes (user_id, favorite, title, url, image_source, prep_info, tags, ingredientSections, directions, notes)
+	`INSERT INTO ` + d.schema + `.recipes (user_id, favorite, title, url, image_source, prep_info, tags, ingredient_sections, directions, notes)
 	VALUES (
 		$1, $2, $3, $4, $5, $6,
 		ARRAY (
@@ -205,7 +206,7 @@ func (d *dbwrapper)	PutRecipe(recipeID int, recipe models.Recipe) (error) {
 
 	timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second * 2)
 	_, err = d.client.Exec(timeoutCtx, 
-	`UPDATE recipes SET (title, url, image_source, prep_info, tags, ingredientSections, directions, notes, modified) = 
+	`UPDATE ` + d.schema + `.recipes SET (title, url, image_source, prep_info, tags, ingredient_sections, directions, notes, modified) = 
 	(
 		$1, $2, $3, $4,
 		ARRAY (
@@ -226,21 +227,21 @@ func (d *dbwrapper) PatchRecipe(recipeID int, favorite bool) (error) {
 
 	timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second * 2)
 	_, err := d.client.Exec(timeoutCtx, 
-	`UPDATE recipes SET favorite = $1 WHERE id = $2`, favorite, recipeID)
+	`UPDATE ` + d.schema + `.recipes SET favorite = $1 WHERE id = $2`, favorite, recipeID)
 
 	cancelFunc()
 	return err
 }
 
 func (d *dbwrapper)	DeleteRecipe(recipeID int) (error) {
-	_, err := d.client.Exec(context.Background(), `DELETE FROM recipes WHERE id = $1`, recipeID)
+	_, err := d.client.Exec(context.Background(), `DELETE FROM ` + d.schema + `.recipes WHERE id = $1`, recipeID)
 	return err
 }
 
 func (d *dbwrapper)	AddTags(tags []string) (error) {
 	timeoutCtx, cancelFunc := context.WithTimeout(context.Background(), time.Second * 2)
 	_, err := d.client.Exec(timeoutCtx, 
-	`INSERT INTO tags (name) VALUES (unnest($1::text[])) ON CONFLICT (name) DO NOTHING`, 
+	`INSERT INTO ` + d.schema + `.tags (name) VALUES (unnest($1::text[])) ON CONFLICT (name) DO NOTHING`, 
 	tags)
 	cancelFunc()
 
